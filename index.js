@@ -6,7 +6,7 @@ const axios = require('axios');
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;
-const apiUrl = process.env.API_URL || 'https://chatserver-bsam.herokuapp.com/api';
+const apiUrl =  'https://chatserver-bsam.herokuapp.com/api';
 
 const app = express();
 app.use(cors());
@@ -34,12 +34,17 @@ wsServer.on('request', function (request) {
     console.log((new Date()) + ' Connection accepted.');
 
     connection.on('message', async (data) => {
-        const { message } = JSON.parse(data.utf8Data);
+        const message = JSON.parse(data.utf8Data);
 
-        axios.post(`${apiUrl}/chats/send-message`, {message: message}).then(res => {
-            responseMessage = res.data;
-            connection.send(JSON.stringify({message :responseMessage}));
-        });
+        console.log(message);
+
+        connection.send(JSON.stringify({message :message}));
+
+        // axios.post(`${apiUrl}/chats/send-message`, {message: message}).then(res => {
+        //     responseMessage = res.data;
+        //     console.log(res);
+        //     connection.send(JSON.stringify({message :responseMessage}));
+        // });
     });
 
     connection.on('close', function (reasonCode, description) {
