@@ -47,6 +47,10 @@ wsServer.on('request', function (request) {
     });
 });
 
+app.get('/', function (req, res) {
+    res.send('Brandon\'s Chat WebSocket is online');
+})
+
 httpServer.listen(port, () => {
     console.log(`Socket listening on port ${port}`);
 });
