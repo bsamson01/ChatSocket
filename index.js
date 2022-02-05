@@ -1,5 +1,5 @@
 const express = require('express');
-const WebSocketServer = require('websocket').server;
+const { Server } = require('ws');
 const cors = require('cors');
 const { createServer } = require("http");
 const axios = require('axios');
@@ -14,42 +14,19 @@ app.use(express.json());
 
 const httpServer = createServer(app);
 
-wsServer = new WebSocketServer({
-    httpServer: httpServer,
-    autoAcceptConnections: false,
-});
+const wss = new Server({ server: httpServer });
 
-function originIsAllowed(origin) {
-    return true;
-}
-
-wsServer.on('request', function (request) {
-
-    if (!originIsAllowed(request.origin)) {
-        request.reject();
-        return;
-    }
-
-    var connection = request.accept();
+wss.on('connection', (ws) => {
     console.log((new Date()) + ' Connection accepted.');
+    ws.on('message', (data) => {
+        const message = JSON.parse(data);
 
-    connection.on('message', async (data) => {
-        const message = JSON.parse(data.utf8Data);
-
-        console.log(message);
-
-        connection.send(JSON.stringify({message :message}));
-
-        // axios.post(`${apiUrl}/chats/send-message`, {message: message}).then(res => {
-        //     responseMessage = res.data;
-        //     console.log(res);
-        //     connection.send(JSON.stringify({message :responseMessage}));
-        // });
+        axios.post(`${apiUrl}/chats/send-message`, {message: message}).then(res => {
+            responseMessage = res.data;
+            ws.send(JSON.stringify({message :message}));
+        });
     });
-
-    connection.on('close', function (reasonCode, description) {
-        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
-    });
+    ws.on('close', () => console.log('Client disconnected'));
 });
 
 app.get('/', function (req, res) {
