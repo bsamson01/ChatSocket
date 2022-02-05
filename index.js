@@ -24,6 +24,11 @@ wss.on('connection', (ws) => {
         axios.post(`${apiUrl}/chats/send-message`, {message: message}).then(res => {
             responseMessage = res.data;
             ws.send(JSON.stringify({message :message}));
+            ws.clients.forEach(client => {
+                if (client.readyState === client.OPEN) {
+                    client.send(JSON.stringify(responseMessage));
+                }
+            });
         });
     });
     ws.on('close', () => console.log('Client disconnected'));
