@@ -15,18 +15,28 @@ app.use(express.json());
 const httpServer = createServer(app);
 
 const wss = new Server({ server: httpServer });
+const clients = new Set();
 
 wss.on('connection', (ws) => {
     console.log((new Date()) + ' Connection accepted.');
+    clients.add(ws);
+
     ws.on('message', (data) => {
         const message = JSON.parse(data);
 
         axios.post(`${apiUrl}/chats/send-message`, {message: message}).then(res => {
             responseMessage = res.data;
-            ws.send(JSON.stringify({message :message}));
+
+            clients.forEach(client => {
+                client.send(JSON.stringify({message: responseMessage}));
+            })
         });
     });
-    ws.on('close', () => console.log('Client disconnected'));
+
+    ws.on('close', () =>{
+        console.log('Client disconnected');
+        clients.delete(ws);
+    });
 });
 
 app.get('/', function (req, res) {
